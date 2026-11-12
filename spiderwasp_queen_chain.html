@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spiderwasp Queen - mission chain</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Barlow:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#0f1b22;--panel:#17272f;--line:#2b4350;--fg:#e8f0ea;--muted:#9db3b0;--toxic:#b9e34a;--boost:#ffa62b;--empty:#1d3039;--bad:#ff6b5b;
+--display:'Barlow Condensed','Arial Narrow',sans-serif;--body:'Barlow',system-ui,sans-serif;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.4;padding:28px 16px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+h1,h2,h3{font-family:var(--display);margin:0;text-transform:uppercase;letter-spacing:.02em}
+header.top{border-bottom:3px solid var(--toxic);padding-bottom:14px;display:flex;flex-direction:column;gap:6px}
+.eyebrow{font-family:var(--display);font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--toxic);font-size:15px}
+h1{font-weight:800;font-size:clamp(34px,7vw,60px);line-height:1}
+.sub{color:var(--muted);font-size:14px}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 14px;min-width:96px}
+.stat b{display:block;font-family:var(--display);font-weight:800;font-size:26px;line-height:1.1}
+.stat span{color:var(--muted);font-size:12.5px;text-transform:uppercase;letter-spacing:.08em}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px}
+.panel h2{font-weight:800;font-size:20px;margin-bottom:8px}
+ul{list-style:none;margin:0;padding:0}
+button{font:inherit;color:inherit}
+.tag{font-family:var(--display);font-weight:800;font-size:12px;letter-spacing:.06em;border-radius:3px;padding:1px 6px;min-width:46px;text-align:center;color:#10200a;margin-top:2px}
+.t-lvl{background:var(--boost)}.t-done{background:#a9d6c0}.t-go{background:#a7c5ee}.t-fight{background:#f0a99b}.t-make{background:#d0b5e8}.t-do{background:var(--muted)}
+small{display:block;color:var(--muted);font-size:12.5px}
+[hidden]{display:none!important}
+/* toolbar: search and current missions */
+.toolbar{position:sticky;top:0;z-index:20;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.searchbox{position:relative}
+.searchbox input{width:100%;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:10px 74px 10px 12px;font:inherit;font-size:16px}
+.searchbox input:focus{outline:2px solid var(--toxic);border-color:var(--toxic)}
+.searchbox .x{position:absolute;right:8px;top:7px;background:none;border:0;color:var(--muted);font-size:20px;cursor:pointer;padding:0 6px}
+.searchbox kbd{position:absolute;right:38px;top:11px;font-family:var(--display);font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:0 5px}
+.results{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--panel);border:1px solid var(--toxic);border-radius:6px;max-height:420px;overflow:auto;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+.res{display:flex;gap:10px;align-items:center;padding:7px 10px;border-bottom:1px solid var(--line);cursor:pointer}
+.res:last-child{border-bottom:0}
+.res.act,.res:hover{background:var(--empty)}
+.res .rt{flex:1;min-width:0}.res .rt b{font-weight:600}
+.res mark{background:var(--toxic);color:#10200a;border-radius:2px;padding:0 1px}
+.res .rl{font-family:var(--display);font-weight:800;color:var(--toxic);min-width:34px}
+.res.fin .rt{opacity:.55}
+.btn{background:var(--empty);border:1px solid var(--line);border-radius:4px;padding:2px 9px;font-size:12.5px;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:#fff}
+.btn.on,.cur.on{background:var(--toxic);border-color:var(--toxic);color:#10200a;font-weight:600}
+.cur{background:var(--empty);border:1px solid var(--line);border-radius:4px;padding:1px 9px;font-size:12.5px;cursor:pointer}
+.cur:hover{border-color:#fff}
+.nores{padding:10px 12px;color:var(--muted)}
+.mchip{display:inline-flex;gap:6px;align-items:center;background:var(--toxic);color:#10200a;border-radius:14px;padding:1px 4px 1px 10px;font-weight:600;font-size:13.5px}
+.mchip.fin{background:var(--empty);color:var(--muted);text-decoration:line-through}
+.mchip button{background:rgba(16,32,10,.18);border:0;border-radius:50%;width:20px;height:20px;line-height:18px;padding:0;cursor:pointer;color:inherit}
+.statusline{color:var(--muted);font-size:13px}
+/* items to make */
+.itemctl{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:0 0 8px;font-size:13.5px;color:var(--muted)}
+.itemctl select,.itemctl input[type=checkbox]{accent-color:var(--toxic)}
+.itemctl select{background:var(--empty);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:3px 6px;font:inherit}
+.tw{overflow:auto}
+table.items{width:100%;border-collapse:collapse;font-size:14px}
+table.items th{font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:4px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.items td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.items td.n,table.items th.n{text-align:right;white-space:nowrap}
+.mo{display:inline-block;font-family:var(--display);font-weight:800;font-size:11px;letter-spacing:.08em;border-radius:3px;padding:0 6px;background:var(--boost);color:#2a1700;margin-left:6px;vertical-align:1px}
+table.items tr.grp td{background:var(--empty);font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:.04em;text-transform:uppercase;border-top:2px solid var(--line)}
+table.items tr.grp small{display:inline;font-family:var(--body);font-weight:400;text-transform:none;letter-spacing:0}
+table.items td.in{padding-left:20px}
+table.items tr.tot td{border-top:2px solid var(--toxic);font-weight:800;font-family:var(--display);font-size:17px}
+.legend{color:var(--muted);font-size:12.5px;margin:6px 0 0}
+.empty{color:var(--muted);padding:6px 0}
+/* ladder */
+.panel h2 small{font-family:var(--body);text-transform:none;letter-spacing:0;font-size:13px;color:var(--muted);font-weight:400;margin-left:6px}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:10px;align-items:start}
+.shead{grid-column:1/-1;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:22px;margin:10px 0 0;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.shead:first-child{margin-top:0}
+.shead .lv{font-family:var(--display);font-weight:800;color:var(--toxic)}
+.shead small{display:inline;font-family:var(--body);text-transform:none;letter-spacing:0;font-weight:400}
+.mcard{background:var(--empty);border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.mcard header{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
+.mcard h4{margin:0;font-family:var(--display);font-weight:800;font-size:19px;line-height:1.15;text-transform:uppercase}
+.mcard.goliath{border-color:var(--boost)}
+.mcard.fin{opacity:.5}
+.mcard.found{outline:3px solid var(--toxic)}
+.mcard .after{font-style:italic}
+.todo{margin:3px 0 0;display:flex;flex-direction:column;gap:2px}
+.todo li{display:flex;gap:7px;align-items:baseline;font-size:13px}
+.todo .tag{font-size:11px;min-width:50px;margin-top:0}
+.todo .cnt{color:var(--muted);font-size:12px}
+.t-build{background:#f5d27a}.t-units{background:#7dd3c0}.t-turnin{background:#e8b4d2}.t-project{background:#9fb4f0}.t-collect{background:#c9d99a}
+</style></head><body><div class="wrap">
+<header class="top"><div class="eyebrow">Missions &middot; Level 60+ &middot; Southern Frontier</div>
+<h1>Spiderwasp Queen</h1>
+<div class="sub">Every mission of level 60 and up that leads to Spiderwasp Queen. Pick the missions you are on and everything before them drops out.</div></header>
+<div class="toolbar">
+<div class="chips" id="chips"></div>
+<div class="searchbox"><input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="Search missions by name, number or giver" aria-label="Search missions"><kbd title="Press / to search">/</kbd><button class="x" id="clearq" aria-label="Clear search">&times;</button><div class="results" id="res" hidden></div></div>
+<div class="statusline" id="status"></div></div>
+<section class="panel"><h2>Items to make</h2>
+<div class="itemctl"><label><input type="checkbox" id="showonly" checked> include mission-only items</label>
+<label>Sort by <select id="sortitems"><option value="total">total time</option><option value="each">time each</option><option value="count">number needed</option><option value="name">name</option></select></label></div>
+<div id="itembody"></div></section>
+<section class="panel" id="missions"><h2>All missions <small id="mcount"></small></h2>
+<p class="legend">Every mission Spiderwasp Queen needs, grouped by storyline and ordered by the player level that opens each one (a ~ means the level is inherited from what it needs). The cards wrap into columns, so a wide window shows more at once.</p>
+<label class="legend" id="finlabel" hidden><input type="checkbox" id="showfin"> show the finished missions</label>
+<div class="mgrid" id="mgrid"></div></section>
+</div><script>
+(function(){
+var D={"missions": {"1176": {"id": 1176, "title": "Environmental Impact Studies", "story": "p03_poisonwater", "giver": "floyd", "prev": [], "jobs": [[99, 1]], "xp": 2500, "todo": [["UNITS", "Build a Water Filtering Plant", 1, 0, 0], ["MAKE", "Make 1 Groundwater Toxicity Kit at the Filtering Plant", 1, 99, 0]], "lvl": 62}, "1177": {"id": 1177, "title": "Field Work", "story": "p03_poisonwater", "giver": "floyd", "prev": [1176], "jobs": [], "xp": 0, "todo": [["GO", "Go to the source of contamination.", 0, 0, 0]], "lvl": 0}, "1178": {"id": 1178, "title": "Surprise Visitors", "story": "p03_poisonwater", "giver": "floyd", "prev": [1177], "jobs": [], "xp": 3500, "todo": [["GO", "Go to the source of the contamination", 0, 0, 0], ["FIGHT", "Defeat the Silver Wolves", 3, 0, 3]], "lvl": 0}, "1179": {"id": 1179, "title": "Surprise Visitors", "story": "p03_poisonwater", "giver": "floyd", "prev": [1178], "jobs": [], "xp": 3500, "todo": [["GO", "Go to the source of the contamination", 0, 0, 0], ["FIGHT", "Defeat the animals", 2, 0, 2]], "lvl": 0}, "1183": {"id": 1183, "title": "Sometimes You Wanna Go", "story": "p03_rebels", "giver": "perkins", "prev": [], "jobs": [], "xp": 3100, "todo": [["GO", "Travel to the Frontier", 0, 0, 0], ["FIGHT", "Defeat 6 Rebel scouts", 6, 0, 7]], "lvl": 60}, "1184": {"id": 1184, "title": "Find Out if They Know Our Names", "story": "p03_rebels", "giver": "morgan", "prev": [1183], "jobs": [], "xp": 3100, "todo": [["GO", "Travel to the Heartland", 0, 0, 0], ["FIGHT", "Defeat the Rebel Command Post", 1, 0, 1]], "lvl": 0}, "1185": {"id": 1185, "title": "We Are Not Glad They Came", "story": "p03_rebels", "giver": "perkins", "prev": [1184], "jobs": [], "xp": 3200, "todo": [["FIGHT", "Defeat the Rebel invaders!", 4, 0, 4]], "lvl": 0}, "1186": {"id": 1186, "title": "Our Troubles Are All The Same", "story": "p03_rebels", "giver": "zoey", "prev": [1185], "jobs": [], "xp": 3300, "todo": [["UNITS", "Build 2 Armor Mulchers", 2, 0, 0]], "lvl": 0}, "1187": {"id": 1187, "title": "Everyone Will Know Our Names", "story": "p03_rebels", "giver": "ashe", "prev": [1186], "jobs": [], "xp": 4500, "todo": [["FIGHT", "Repel General Ashe", 1, 0, 1]], "lvl": 0}, "1198": {"id": 1198, "title": "Search for the Mad Inventor", "story": "p03_searchharris", "giver": "zoey", "prev": [1258], "jobs": [[329, 1]], "xp": 2500, "todo": [["MAKE", "Build a Scout Rover in the Toolshop", 1, 329, 0]], "lvl": 62}, "1199": {"id": 1199, "title": "Mountains of Madness", "story": "p03_searchharris", "giver": "zoey", "prev": [1198], "jobs": [], "xp": 0, "todo": [["GO", "Go to the Mountains outside of Skarborough", 0, 0, 0]], "lvl": 0}, "1200": {"id": 1200, "title": "Lonely Rover", "story": "p03_searchharris", "giver": "zoey", "prev": [1199], "jobs": [], "xp": 3500, "todo": [["GO", "Go to Skarborough Mountains", 0, 0, 0], ["FIGHT", "Defeat the Traps Around Skarborough", 3, 0, 3]], "lvl": 0}, "1085": {"id": 1085, "title": "A Robot Outside The Ruins", "story": "p03_bossmonster", "giver": "perkins", "prev": [1115], "jobs": [], "xp": 1000, "todo": [["GO", "Go to the World Map", 0, 0, 0], ["FIGHT", "Encounter the Construct", 1, 0, 1]], "lvl": 65}, "1086": {"id": 1086, "title": "We Never Taught The Robots To Love", "story": "p03_bossmonster", "giver": "zoey", "prev": [1085], "jobs": [], "xp": 500, "todo": [["GO", "Go to i17", 0, 0, 0]], "lvl": 0}, "1087": {"id": 1087, "title": "Sometimes I Kill For Fun", "story": "p03_bossmonster", "giver": "zoey", "prev": [1086], "jobs": [], "xp": 3400, "todo": [["GO", "Go to the World Map", 0, 0, 0], ["FIGHT", "Defeat the Rebels on the World Map", 3, 0, 3]], "lvl": 0}, "1088": {"id": 1088, "title": "Intelligence is Sometimes a Misnomer", "story": "p03_bossmonster", "giver": "zoey", "prev": [1087], "jobs": [], "xp": 3000, "todo": [["GO", "Go to the World Map Outside Greensborough", 0, 0, 0], ["FIGHT", "Defeat Rebels", 2, 0, 2]], "lvl": 0}, "1089": {"id": 1089, "title": "Jet Engine Thieves", "story": "p03_bossmonster", "giver": "zoey", "prev": [1088], "jobs": [], "xp": 2400, "todo": [["GO", "Go to the Hidden Rebel Hangar", 0, 0, 0], ["FIGHT", "Defeat the Rebels", 1, 0, 1]], "lvl": 0}, "1090": {"id": 1090, "title": "Jet Fuel", "story": "p03_bossmonster", "giver": "morgan", "prev": [1089], "jobs": [[71, 1], [327, 1]], "xp": 2000, "todo": [["MAKE", "Modify Jet Engine at the Toolshop", 1, 327, 0], ["MAKE", "Make Jet Fuel at the Distillery", 1, 71, 0]], "lvl": 0}, "1091": {"id": 1091, "title": "SCRAM, For Kids", "story": "p03_bossmonster", "giver": "zoey", "prev": [1090], "jobs": [[328, 1]], "xp": 1500, "todo": [["MAKE", "Build the Scram Cannon at the Toolshop", 1, 328, 0]], "lvl": 0}, "1092": {"id": 1092, "title": "Battle with Experiment X17", "story": "p03_bossmonster", "giver": "zoey", "prev": [1091], "jobs": [], "xp": 5000, "todo": [["FIGHT", "Defeat the Ancient Tech with the Scram Cannon", 1, 0, 1]], "lvl": 0}, "1107": {"id": 1107, "title": "Remediation Meditation", "story": "p03_enviro", "giver": "floyd", "prev": [1092, 1254], "jobs": [[73, 1]], "xp": 2100, "todo": [["MAKE", "Make Ethanol at the Distillery", 1, 73, 0]], "lvl": 66}, "1108": {"id": 1108, "title": "Way Down in the Mine", "story": "p03_enviro", "giver": "floyd", "prev": [1107], "jobs": [], "xp": 0, "todo": [["GO", "Go to the Uranium Mine", 0, 0, 0]], "lvl": 0}, "1109": {"id": 1109, "title": "Danger is Double", "story": "p03_enviro", "giver": "zoey", "prev": [1108], "jobs": [], "xp": 4060, "todo": [["GO", "Go to the Uranium Mine", 0, 0, 0], ["FIGHT", "Defeat the Spiderwasps!", 1, 0, 1]], "lvl": 0}, "1110": {"id": 1110, "title": "Til Your Blood Runs as Black as Coal", "story": "p03_enviro", "giver": "zoey", "prev": [1109], "jobs": [], "xp": 5040, "todo": [["GO", "Go to the Spiderwasp Nest", 0, 0, 0], ["FIGHT", "Fight off the Spiderwasps!", 3, 0, 3]], "lvl": 0}, "1238": {"id": 1238, "title": "Search for Dr. Harris", "story": "p03_trackingharris", "giver": "zoey", "prev": [1200], "jobs": [], "xp": 0, "todo": [["GO", "Go to The Ancient Ruins", 0, 0, 0]], "lvl": 63}, "1239": {"id": 1239, "title": "Innovation is the Mother of Pain", "story": "p03_trackingharris", "giver": "zoey", "prev": [1238], "jobs": [], "xp": 3500, "todo": [["GO", "Go to The Ancient Ruins", 0, 0, 0], ["FIGHT", "Defeat The Traps", 3, 0, 3]], "lvl": 0}, "1240": {"id": 1240, "title": "Zoey Vs. Traps Vs Raptors", "story": "p03_trackingharris", "giver": "zoey", "prev": [1239], "jobs": [[330, 1], [331, 1]], "xp": 2500, "todo": [["MAKE", "Build Radiation Detector at Toolshop", 1, 330, 0], ["MAKE", "Build Infrared Goggles at Toolshop", 1, 331, 0]], "lvl": 0}, "1114": {"id": 1114, "title": "Picking up Bad Signals", "story": "p03_harristrouble", "giver": "perkins", "prev": [1242], "jobs": [], "xp": 0, "todo": [["GO", "Go to the Ancient Ruins", 0, 0, 0]], "lvl": 64}, "1115": {"id": 1115, "title": "We Keep Rescuing People", "story": "p03_harristrouble", "giver": "zoey", "prev": [1114], "jobs": [], "xp": 4000, "todo": [["GO", "Track Dr. Harris Down", 0, 0, 0], ["FIGHT", "Defeat the Rebels", 3, 0, 3]], "lvl": 0}, "1241": {"id": 1241, "title": "Return to Ancient Ruins", "story": "p03_trackingharris", "giver": "zoey", "prev": [1240], "jobs": [], "xp": 0, "todo": [["GO", "Go to the Ancient Ruins", 0, 0, 0]], "lvl": 0}, "1242": {"id": 1242, "title": "Robots Can't Break Your Heart", "story": "p03_trackingharris", "giver": "zoey", "prev": [1241], "jobs": [], "xp": 2500, "todo": [["FIGHT", "Defeat Dexter Fragment", 1, 0, 1]], "lvl": 0}, "1252": {"id": 1252, "title": "Mine Games", "story": "p03_uranium", "giver": "morgan", "prev": [1179], "jobs": [[286, 3]], "xp": 3000, "todo": [["MAKE", "Make 3 Hazmat Suits at the Sweatshop", 3, 286, 0]], "lvl": 63}, "1253": {"id": 1253, "title": "Get the Lead Out", "story": "p03_uranium", "giver": "morgan", "prev": [1252], "jobs": [[180, 3], [312, 1], [332, 1]], "xp": 3200, "todo": [["MAKE", "Make 1 Jackhammer at the Tool Shop", 1, 312, 0], ["MAKE", "Make 1 Impact Wrench at the Tool Shop", 1, 332, 0], ["MAKE", "Make 3 Lead Containers at the Machine Shop", 3, 180, 0]], "lvl": 0}, "1254": {"id": 1254, "title": "Surprise Visitors II", "story": "p03_uranium", "giver": "floyd", "prev": [1253], "jobs": [], "xp": 4500, "todo": [["GO", "Go to the source of the contamination", 0, 0, 0], ["FIGHT", "Defeat the spidewasps", 4, 0, 4]], "lvl": 0}, "1255": {"id": 1255, "title": "State of the Art of War", "story": "p03_weapons", "giver": "ramsey", "prev": [1187], "jobs": [], "xp": 0, "todo": [["GO", "Travel to Installation 17", 0, 0, 0]], "lvl": 61}, "1256": {"id": 1256, "title": "The Future is Nowish", "story": "p03_weapons", "giver": "morgan", "prev": [1255], "jobs": [], "xp": 2500, "todo": [["TURN IN", "Turn in 12,000 Steel", 0, 0, 0], ["TURN IN", "Turn in 12,000 Oil", 0, 0, 0]], "lvl": 0}, "1257": {"id": 1257, "title": "System Shock", "story": "p03_weapons", "giver": "aurora", "prev": [1256], "jobs": [[192, 4]], "xp": 2100, "todo": [["MAKE", "Make 4 Gas-Powered Twisters", 4, 192, 0]], "lvl": 0}, "1258": {"id": 1258, "title": "Prototype in the Field", "story": "p03_weapons", "giver": "morgan", "prev": [1257], "jobs": [], "xp": 1000, "todo": [["GO", "Got to Installation 17", 0, 0, 0], ["FIGHT", "Test the New Weapon", 1, 0, 1]], "lvl": 0}, "1137": {"id": 1137, "title": "Infestation", "story": "p03_morewasps", "giver": "floyd", "prev": [1110], "jobs": [], "xp": 4900, "todo": [["GO", "Go to the Spiderwasp Nest", 0, 0, 0], ["FIGHT", "Wipe out the Spiderwasps", 5, 0, 5]], "lvl": 68}, "1138": {"id": 1138, "title": "Infiltration", "story": "p03_morewasps", "giver": "morgan", "prev": [1137], "jobs": [], "xp": 0, "todo": [["GO", "Go to the Spiderwasp Nest", 0, 0, 0], ["FIGHT", "Destroy 3 Spiderwasp Egg Clutches", 3, 0, 3]], "lvl": 0}, "1139": {"id": 1139, "title": "Infiltration", "story": "p03_morewasps", "giver": "morgan", "prev": [1138], "jobs": [], "xp": 7700, "todo": [["GO", "Go to the Spiderwasp Nest", 0, 0, 0], ["FIGHT", "Defeat the Spiderwasp Queen!", 1, 0, 1]], "lvl": 0}}, "order": [1183, 1184, 1185, 1186, 1187, 1255, 1256, 1257, 1258, 1176, 1177, 1178, 1179, 1198, 1199, 1200, 1238, 1239, 1240, 1241, 1242, 1252, 1253, 1254, 1114, 1115, 1085, 1086, 1087, 1088, 1089, 1090, 1091, 1092, 1107, 1108, 1109, 1110, 1137, 1138, 1139], "stories": {"p03_bossmonster": {"label": "A Robot Outside The Ruins", "level": 65, "inferred": false, "preds": ["p03_harristrouble"], "missions": [1085, 1086, 1087, 1088, 1089, 1090, 1091, 1092]}, "p03_enviro": {"label": "Remediation Meditation", "level": 66, "inferred": false, "preds": ["p03_bossmonster", "p03_uranium"], "missions": [1107, 1108, 1109, 1110]}, "p03_harristrouble": {"label": "Picking up Bad Signals", "level": 64, "inferred": false, "preds": ["p03_trackingharris"], "missions": [1114, 1115]}, "p03_morewasps": {"label": "Infiltration", "level": 68, "inferred": false, "preds": ["p03_enviro"], "missions": [1137, 1138, 1139]}, "p03_poisonwater": {"label": "Environmental Impact Studies", "level": 62, "inferred": false, "preds": [], "missions": [1176, 1177, 1178, 1179]}, "p03_rebels": {"label": "Sometimes You Wanna Go", "level": 60, "inferred": false, "preds": [], "missions": [1183, 1184, 1185, 1186, 1187]}, "p03_searchharris": {"label": "Search for the Mad Inventor", "level": 62, "inferred": false, "preds": ["p03_weapons"], "missions": [1198, 1199, 1200]}, "p03_trackingharris": {"label": "Search for Dr. Harris", "level": 63, "inferred": false, "preds": ["p03_searchharris"], "missions": [1238, 1239, 1240, 1241, 1242]}, "p03_uranium": {"label": "Mine Games", "level": 63, "inferred": false, "preds": ["p03_poisonwater"], "missions": [1252, 1253, 1254]}, "p03_weapons": {"label": "State of the Art of War", "level": 61, "inferred": false, "preds": ["p03_rebels"], "missions": [1255, 1256, 1257, 1258]}}, "jobs": {"99": {"id": 99, "name": "Toxicity Kit", "group": "Other", "time": 21600, "cost": {"gold": 20000}, "only": true, "onlyFor": ["Environmental Impact Studies"]}, "329": {"id": 329, "name": "Scout Rover", "group": "Toolshop", "time": 21600, "cost": {"gold": 20000}, "only": true, "onlyFor": ["Search for the Mad Inventor"]}, "71": {"id": 71, "name": "Jet Fuel", "group": "Distillery", "time": 28800, "cost": {"gold": 12000}, "only": true, "onlyFor": ["Jet Fuel"]}, "327": {"id": 327, "name": "Modify Jet Engine", "group": "Toolshop", "time": 36000, "cost": {"gold": 30000}, "only": true, "onlyFor": ["Jet Fuel"]}, "328": {"id": 328, "name": "Scram Cannon", "group": "Toolshop", "time": 86400, "cost": {"gold": 15000}, "only": true, "onlyFor": ["SCRAM, For Kids"]}, "73": {"id": 73, "name": "Ethanol", "group": "Distillery", "time": 28800, "cost": {"gold": 7500}, "only": true, "onlyFor": ["Remediation Meditation"]}, "330": {"id": 330, "name": "Radiation Detector", "group": "Toolshop", "time": 21600, "cost": {"gold": 20000}, "only": true, "onlyFor": ["Zoey Vs. Traps Vs Raptors"]}, "331": {"id": 331, "name": "Infrared Goggles", "group": "Toolshop", "time": 21600, "cost": {"gold": 20000}, "only": true, "onlyFor": ["Zoey Vs. Traps Vs Raptors"]}, "286": {"id": 286, "name": "Hazmat Suit", "group": "Sweatshop", "time": 64800, "cost": {"gold": 715}, "only": false, "onlyFor": []}, "180": {"id": 180, "name": "Lead Container", "group": "Machine", "time": 68400, "cost": {"gold": 15000}, "only": true, "onlyFor": ["Get the Lead Out"]}, "312": {"id": 312, "name": "Jackhammer", "group": "Toolshop", "time": 14400, "cost": {"gold": 120}, "only": false, "onlyFor": []}, "332": {"id": 332, "name": "Impact Wrench", "group": "Toolshop", "time": 64800, "cost": {"gold": 340}, "only": false, "onlyFor": []}, "192": {"id": 192, "name": "Gas-Powered Twister", "group": "Machine", "time": 28800, "cost": {"gold": 325}, "only": false, "onlyFor": []}}, "goliath": "p03_morewasps", "chain": [1137, 1138, 1139], "minLevel": 60};
+var M=D.missions,S=D.stories,J=D.jobs;
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function dur(s){var d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),x=s%60,p=[];if(d)p.push(d+'d');if(h)p.push(h+'h');if(m)p.push(m+'m');if(x)p.push(x+'s');return p.length?p.join(' '):'0s'}
+/* ---- normalising text for search: lower case, no accents, no punctuation, one space between words ---- */
+function normMap(s){
+ var out='',idx=[],space=true,i,k,c,ch;
+ for(i=0;i<s.length;i++){
+  c=s.charAt(i).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+  for(k=0;k<c.length;k++){ch=c.charAt(k);
+   if(/[a-z0-9]/.test(ch)){out+=ch;idx.push(i);space=false}
+   else if(ch==="'"||ch==='’'||ch==='`'){}
+   else if(!space){out+=' ';idx.push(i);space=true}}}
+ if(out.charAt(out.length-1)===' '){out=out.slice(0,-1);idx.pop()}
+ return {n:out,idx:idx}}
+function norm(s){return normMap(String(s)).n}
+var IDX={};D.order.forEach(function(id){var m=M[id];IDX[id]={t:normMap(m.title),h:norm(m.title+' '+id+' '+S[m.story].label+' '+m.giver)}});
+function lev(a,b,max){
+ if(Math.abs(a.length-b.length)>max)return max+1;
+ var prev=[],i,j;for(j=0;j<=b.length;j++)prev[j]=j;
+ for(i=1;i<=a.length;i++){var cur=[i],low=i;
+  for(j=1;j<=b.length;j++){cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a.charAt(i-1)===b.charAt(j-1)?0:1));if(cur[j]<low)low=cur[j]}
+  if(low>max)return max+1;prev=cur}
+ return prev[b.length]}
+/* a typo: within one edit of a word (two for long words), or the start of a word with one edit */
+function near(t,words){var max=t.length<4?0:t.length<7?1:2;if(!max)return false;
+ return words.some(function(w){return lev(t,w,max)<=max||(w.length>t.length&&lev(t,w.slice(0,t.length),max)<=max)})}
+function search(q){
+ var tokens=norm(q).split(' ').filter(Boolean);if(!tokens.length)return {list:[],tokens:tokens,fuzzy:false};
+ var list=[];
+ D.order.forEach(function(id){var x=IDX[id],score=0,ok=true;
+  tokens.forEach(function(t){if(!ok)return;
+   if(x.t.n.indexOf(t)===0)score+=5;else if((' '+x.t.n).indexOf(' '+t)>=0)score+=4;else if(x.t.n.indexOf(t)>=0)score+=3;
+   else if((' '+x.h).indexOf(' '+t)>=0)score+=2;else if(x.h.indexOf(t)>=0)score+=1;else ok=false});
+  if(ok)list.push({id:id,score:score})});
+ var fuzzy=false;
+ if(!list.length){fuzzy=true;
+  D.order.forEach(function(id){var x=IDX[id];
+   var words=x.h.split(' ');
+   if(tokens.every(function(t){return words.indexOf(t)>=0||x.h.indexOf(t)>=0||near(t,words)}))list.push({id:id,score:0})})}
+ list.sort(function(a,b){return b.score-a.score||(S[M[a.id].story].level-S[M[b.id].story].level)||a.id-b.id});
+ return {list:list,tokens:tokens,fuzzy:fuzzy}}
+function highlight(id,tokens){
+ var m=M[id],x=IDX[id].t,marks=[],t,p,i;
+ tokens.forEach(function(tk){p=x.n.indexOf(tk);while(p>=0){marks.push([x.idx[p],x.idx[p+tk.length-1]+1]);p=x.n.indexOf(tk,p+1)}});
+ marks.sort(function(a,b){return a[0]-b[0]});
+ var merged=[];marks.forEach(function(r){var l=merged[merged.length-1];if(l&&r[0]<=l[1])l[1]=Math.max(l[1],r[1]);else merged.push(r.slice())});
+ var out='',pos=0;merged.forEach(function(r){out+=esc(m.title.slice(pos,r[0]))+'<mark>'+esc(m.title.slice(r[0],r[1]))+'</mark>';pos=r[1]});
+ return out+esc(m.title.slice(pos))}
+/* ---- the player's current missions ---- */
+var KEY='queen-chain-current-v1',current={},done={},active=0,shown=[];
+try{JSON.parse(localStorage.getItem(KEY)||'[]').forEach(function(id){if(M[id])current[id]=1})}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(Object.keys(current).map(Number)))}catch(e){}}
+function compute(){
+ done={};var stack=[];Object.keys(current).forEach(function(id){M[id].prev.forEach(function(p){stack.push(p)})});
+ while(stack.length){var id=stack.pop();if(done[id])continue;done[id]=1;M[id].prev.forEach(function(p){stack.push(p)})}}
+function toggle(id){if(current[id])delete current[id];else current[id]=1;save();render()}
+/* ---- search box ---- */
+var q=$('q'),res=$('res');
+function renderResults(){
+ var r=search(q.value);shown=r.list.slice(0,12);if(active>=shown.length)active=0;
+ if(!q.value.trim()){res.hidden=true;return}
+ if(!shown.length){res.innerHTML='<div class="nores">No mission matches “'+esc(q.value)+'”. Try fewer words; accents, capitals and punctuation do not matter.</div>';res.hidden=false;return}
+ var html=(r.fuzzy?'<div class="nores">No exact match; closest guesses:</div>':'');
+ shown.forEach(function(x,i){var m=M[x.id],st=S[m.story];
+  html+='<div class="res'+(i===active?' act':'')+(done[x.id]?' fin':'')+'" data-i="'+i+'"><span class="rl">L'+st.level+'</span><div class="rt"><b>'+(r.fuzzy?esc(m.title):highlight(x.id,r.tokens))+'</b><small>'+esc(st.label)+' - mission '+x.id+(done[x.id]?' - finished (hidden)':'')+'</small></div>'
+   +'<button class="btn loc" data-i="'+i+'">Show</button><button class="btn setcur'+(current[x.id]?' on':'')+'" data-i="'+i+'">'+(current[x.id]?'Current ✓':'I am on this')+'</button></div>'});
+ if(r.list.length>shown.length)html+='<div class="nores">+ '+(r.list.length-shown.length)+' more: keep typing to narrow it down.</div>';
+ res.innerHTML=html;res.hidden=false}
+var debounce=null;
+q.addEventListener('input',function(){clearTimeout(debounce);debounce=setTimeout(function(){active=0;renderResults()},60)});
+q.addEventListener('focus',renderResults);
+q.addEventListener('keydown',function(e){
+ if(e.key==='ArrowDown'){e.preventDefault();if(shown.length){active=(active+1)%shown.length;renderResults()}}
+ else if(e.key==='ArrowUp'){e.preventDefault();if(shown.length){active=(active-1+shown.length)%shown.length;renderResults()}}
+ else if(e.key==='Enter'&&shown[active]){e.preventDefault();if(e.shiftKey)locate(shown[active].id);else{toggle(shown[active].id);renderResults()}}
+ else if(e.key==='Escape'){if(q.value){q.value='';renderResults()}else q.blur()}});
+$('clearq').addEventListener('click',function(){q.value='';renderResults();q.focus()});
+document.addEventListener('keydown',function(e){var t=e.target.tagName;if(e.key==='/'&&t!=='INPUT'&&t!=='SELECT'&&t!=='TEXTAREA'){e.preventDefault();q.focus();q.select()}});
+document.addEventListener('mousedown',function(e){if(!e.target.closest('.searchbox'))res.hidden=true});
+res.addEventListener('mousedown',function(e){e.preventDefault()});
+res.addEventListener('click',function(e){
+ var b=e.target.closest('.btn'),row=e.target.closest('.res');if(!row)return;var x=shown[+row.dataset.i];if(!x)return;
+ if(b&&b.classList.contains('setcur')){toggle(x.id);renderResults()}else locate(x.id)});
+function locate(id){res.hidden=true;if(done[id])$('showfin').checked=true;render();var c=document.querySelector('.mcard[data-m="'+id+'"]');if(c){c.scrollIntoView({block:'center'});c.classList.add('found');setTimeout(function(){c.classList.remove('found')},1800)}}
+/* ---- chips and status ---- */
+function renderChips(){
+ var ids=Object.keys(current).map(Number).sort(function(a,b){return a-b}),html='<span class="lab">My current missions:</span>';
+ ids.forEach(function(id){html+='<span class="mchip'+(done[id]?' fin':'')+'" title="'+(done[id]?'Before another current mission, so counted as finished':'')+'">'+esc(M[id].title)+'<button data-x="'+id+'" aria-label="Remove">×</button></span>'});
+ if(ids.length)html+='<button class="btn" id="clearall">Clear all</button>';
+ $('chips').innerHTML=html;
+ var left=D.order.filter(function(id){return !done[id]}).length;
+ $('status').textContent=(ids.length?'':'None selected: everything from level '+D.minLevel+' is shown. Search for a mission and press Enter, or use the buttons below. ')+left+' of '+D.order.length+' missions left'+(D.order.length-left?' ('+(D.order.length-left)+' finished, hidden)':'');
+ var ca=$('clearall');if(ca)ca.onclick=function(){current={};save();render()}}
+$('chips').addEventListener('click',function(e){var b=e.target.closest('button[data-x]');if(b){delete current[b.dataset.x];save();render()}});
+/* ---- items to make ---- */
+function renderItems(){
+ var agg={};
+ D.order.forEach(function(id){if(done[id])return;M[id].jobs.forEach(function(j){var a=agg[j[0]]||(agg[j[0]]={job:J[j[0]],count:0,from:[]});a.count+=j[1];a.from.push(M[id].title)})});
+ var rows=Object.keys(agg).map(function(k){return agg[k]}),withOnly=$('showonly').checked;
+ if(!withOnly)rows=rows.filter(function(r){return !r.job.only});
+ var sort=$('sortitems').value;
+ rows.sort(function(a,b){if(sort==='name')return a.job.name.localeCompare(b.job.name);if(sort==='each')return b.job.time-a.job.time;if(sort==='count')return b.count-a.count||a.job.name.localeCompare(b.job.name);return b.job.time*b.count-a.job.time*a.count});
+ if(!rows.length){$('itembody').innerHTML='<div class="empty">Nothing to make'+(withOnly?'':' (mission-only items are hidden)')+'.</div>';return}
+ var total=0,cnt=0,groups={},gmap={};
+ rows.forEach(function(r){var j=r.job,t=j.time*r.count;total+=t;cnt+=r.count;
+  groups[j.group]=(groups[j.group]||0)+t;var g=gmap[j.group]||(gmap[j.group]={rows:[],count:0});g.rows.push(r);g.count+=r.count});
+ var gnames=Object.keys(gmap).sort(function(a,b){return sort==='name'?a.localeCompare(b):groups[b]-groups[a]||a.localeCompare(b)});
+ var html='<div class="tw"><table class="items"><tr><th>Item</th><th class="n">Needed</th><th class="n">Time each</th><th class="n">Total time</th><th>Cost each</th><th>For mission</th></tr>';
+ gnames.forEach(function(gn){var g=gmap[gn];
+  html+='<tr class="grp"><td>'+esc(gn)+' <small>'+g.rows.length+' kind'+(g.rows.length>1?'s':'')+' of item</small></td><td class="n">'+g.count+'</td><td></td><td class="n">'+dur(groups[gn])+'</td><td></td><td></td></tr>';
+  g.rows.forEach(function(r){var j=r.job,t=j.time*r.count;
+   var cs=Object.keys(j.cost).map(function(k){return j.cost[k]+' '+k}).join(', ')||'-';
+   var from=r.from.slice(0,2).map(esc).join('; ')+(r.from.length>2?' +'+(r.from.length-2):'');
+   html+='<tr><td class="in">'+esc(j.name)+(j.only?'<span class="mo" title="Can only be made while one of these missions is active: '+esc(j.onlyFor.join('; '))+'">MISSION ONLY</span>':'')+'</td><td class="n">'+r.count+'</td><td class="n">'+dur(j.time)+'</td><td class="n">'+dur(t)+'</td><td>'+esc(cs)+'</td><td><small>'+from+'</small></td></tr>'})});
+ html+='<tr class="tot"><td>Total</td><td class="n">'+cnt+'</td><td></td><td class="n">'+dur(total)+'</td><td></td><td></td></tr></table></div>';
+ $('itembody').innerHTML=html}
+$('showonly').addEventListener('change',renderItems);$('sortitems').addEventListener('change',renderItems);
+/* ---- all the missions, in order, as cards that wrap into columns ---- */
+function cardHtml(m,isDone){
+ return '<article class="mcard'+(m.story===D.goliath?' goliath':'')+(isDone?' fin':'')+'" data-m="'+m.id+'"><header><h4>'+esc(m.title)+'</h4>'
+  +(isDone?'':'<button class="cur'+(current[m.id]?' on':'')+'" data-m="'+m.id+'">'+(current[m.id]?'Current \u2713':'I am on this')+'</button>')+'</header>'
+  +(m.xp?'<small>'+m.xp.toLocaleString()+' xp</small>':'')
+  +todoHtml(m)+'</article>'}
+function renderMissions(){
+ var showFin=$('showfin').checked,html='',last=null,count=0,fin=D.order.filter(function(id){return done[id]}).length;
+ D.order.forEach(function(id){var m=M[id],isDone=!!done[id];if(isDone&&!showFin)return;
+  if(m.story!==last){last=m.story;var st=S[m.story];
+   html+='<h3 class="shead"><span class="lv">'+(st.inferred?'~':'')+'L'+st.level+'</span>'+esc(st.label)+(st.preds.length?'<small>after '+st.preds.map(function(p){return esc(S[p].label)}).join('; ')+'</small>':'')+'</h3>'}
+  html+=cardHtml(m,isDone);count++});
+ $('mgrid').innerHTML=html||'<div class="empty">Every mission is finished.</div>';
+ $('mcount').textContent=count+' shown'+(fin?', '+fin+' finished':'');
+ $('finlabel').hidden=!fin;if(!fin)$('showfin').checked=false}
+$('showfin').addEventListener('change',renderMissions);
+function todoHtml(m){
+ if(!m.todo.length)return '<ul class="todo"><li><span class="cnt">no objectives listed</span></li></ul>';
+ return '<ul class="todo">'+m.todo.map(function(t){
+  var tag=t[0],cls='t-'+tag.toLowerCase().replace(' ',''),extra='';
+  if(t[3]&&J[t[3]]){var j=J[t[3]],n=t[2]||1;extra=' <span class="cnt">'+(n>1?'×'+n+' · '+dur(j.time*n)+' ('+dur(j.time)+' each)':dur(j.time))+'</span>'+(j.only?'<span class="mo" title="Can only be made while one of these missions is active: '+esc(j.onlyFor.join('; '))+'">MISSION ONLY</span>':'')}
+  else if(t[4]){extra=' <span class="cnt">'+(t[2]&&t[2]<t[4]?t[2]+' of '+t[4]+' battles':t[4]===1?'1 battle':t[4]+' battles')+'</span>'}
+  else if(t[2]>1){extra=' <span class="cnt">×'+t[2]+'</span>'}
+  return '<li><span class="tag '+cls+'">'+tag+'</span><span>'+esc(t[1])+extra+'</span></li>'}).join('')+'</ul>'}
+document.addEventListener('click',function(e){var b=e.target.closest('.cur[data-m]');if(b)toggle(+b.dataset.m)});
+function render(){compute();renderChips();renderItems();renderMissions();if(!res.hidden)renderResults()}
+render();
+})();
+</script></body></html>

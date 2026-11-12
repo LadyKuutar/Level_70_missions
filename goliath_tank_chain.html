@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Goliath Tank - mission chain</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Barlow:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#0f1b22;--panel:#17272f;--line:#2b4350;--fg:#e8f0ea;--muted:#9db3b0;--toxic:#b9e34a;--boost:#ffa62b;--empty:#1d3039;--bad:#ff6b5b;
+--display:'Barlow Condensed','Arial Narrow',sans-serif;--body:'Barlow',system-ui,sans-serif;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.4;padding:28px 16px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+h1,h2,h3{font-family:var(--display);margin:0;text-transform:uppercase;letter-spacing:.02em}
+header.top{border-bottom:3px solid var(--toxic);padding-bottom:14px;display:flex;flex-direction:column;gap:6px}
+.eyebrow{font-family:var(--display);font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--toxic);font-size:15px}
+h1{font-weight:800;font-size:clamp(34px,7vw,60px);line-height:1}
+.sub{color:var(--muted);font-size:14px}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 14px;min-width:96px}
+.stat b{display:block;font-family:var(--display);font-weight:800;font-size:26px;line-height:1.1}
+.stat span{color:var(--muted);font-size:12.5px;text-transform:uppercase;letter-spacing:.08em}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px}
+.panel h2{font-weight:800;font-size:20px;margin-bottom:8px}
+ul{list-style:none;margin:0;padding:0}
+button{font:inherit;color:inherit}
+.tag{font-family:var(--display);font-weight:800;font-size:12px;letter-spacing:.06em;border-radius:3px;padding:1px 6px;min-width:46px;text-align:center;color:#10200a;margin-top:2px}
+.t-lvl{background:var(--boost)}.t-done{background:#a9d6c0}.t-go{background:#a7c5ee}.t-fight{background:#f0a99b}.t-make{background:#d0b5e8}.t-do{background:var(--muted)}
+small{display:block;color:var(--muted);font-size:12.5px}
+[hidden]{display:none!important}
+/* toolbar: search and current missions */
+.toolbar{position:sticky;top:0;z-index:20;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.searchbox{position:relative}
+.searchbox input{width:100%;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:10px 74px 10px 12px;font:inherit;font-size:16px}
+.searchbox input:focus{outline:2px solid var(--toxic);border-color:var(--toxic)}
+.searchbox .x{position:absolute;right:8px;top:7px;background:none;border:0;color:var(--muted);font-size:20px;cursor:pointer;padding:0 6px}
+.searchbox kbd{position:absolute;right:38px;top:11px;font-family:var(--display);font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:0 5px}
+.results{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--panel);border:1px solid var(--toxic);border-radius:6px;max-height:420px;overflow:auto;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+.res{display:flex;gap:10px;align-items:center;padding:7px 10px;border-bottom:1px solid var(--line);cursor:pointer}
+.res:last-child{border-bottom:0}
+.res.act,.res:hover{background:var(--empty)}
+.res .rt{flex:1;min-width:0}.res .rt b{font-weight:600}
+.res mark{background:var(--toxic);color:#10200a;border-radius:2px;padding:0 1px}
+.res .rl{font-family:var(--display);font-weight:800;color:var(--toxic);min-width:34px}
+.res.fin .rt{opacity:.55}
+.btn{background:var(--empty);border:1px solid var(--line);border-radius:4px;padding:2px 9px;font-size:12.5px;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:#fff}
+.btn.on,.cur.on{background:var(--toxic);border-color:var(--toxic);color:#10200a;font-weight:600}
+.cur{background:var(--empty);border:1px solid var(--line);border-radius:4px;padding:1px 9px;font-size:12.5px;cursor:pointer}
+.cur:hover{border-color:#fff}
+.nores{padding:10px 12px;color:var(--muted)}
+.mchip{display:inline-flex;gap:6px;align-items:center;background:var(--toxic);color:#10200a;border-radius:14px;padding:1px 4px 1px 10px;font-weight:600;font-size:13.5px}
+.mchip.fin{background:var(--empty);color:var(--muted);text-decoration:line-through}
+.mchip button{background:rgba(16,32,10,.18);border:0;border-radius:50%;width:20px;height:20px;line-height:18px;padding:0;cursor:pointer;color:inherit}
+.statusline{color:var(--muted);font-size:13px}
+/* items to make */
+.itemctl{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:0 0 8px;font-size:13.5px;color:var(--muted)}
+.itemctl select,.itemctl input[type=checkbox]{accent-color:var(--toxic)}
+.itemctl select{background:var(--empty);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:3px 6px;font:inherit}
+.tw{overflow:auto}
+table.items{width:100%;border-collapse:collapse;font-size:14px}
+table.items th{font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:4px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.items td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.items td.n,table.items th.n{text-align:right;white-space:nowrap}
+.mo{display:inline-block;font-family:var(--display);font-weight:800;font-size:11px;letter-spacing:.08em;border-radius:3px;padding:0 6px;background:var(--boost);color:#2a1700;margin-left:6px;vertical-align:1px}
+table.items tr.grp td{background:var(--empty);font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:.04em;text-transform:uppercase;border-top:2px solid var(--line)}
+table.items tr.grp small{display:inline;font-family:var(--body);font-weight:400;text-transform:none;letter-spacing:0}
+table.items td.in{padding-left:20px}
+table.items tr.tot td{border-top:2px solid var(--toxic);font-weight:800;font-family:var(--display);font-size:17px}
+.legend{color:var(--muted);font-size:12.5px;margin:6px 0 0}
+.empty{color:var(--muted);padding:6px 0}
+/* ladder */
+.panel h2 small{font-family:var(--body);text-transform:none;letter-spacing:0;font-size:13px;color:var(--muted);font-weight:400;margin-left:6px}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:10px;align-items:start}
+.shead{grid-column:1/-1;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:22px;margin:10px 0 0;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.shead:first-child{margin-top:0}
+.shead .lv{font-family:var(--display);font-weight:800;color:var(--toxic)}
+.shead small{display:inline;font-family:var(--body);text-transform:none;letter-spacing:0;font-weight:400}
+.mcard{background:var(--empty);border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.mcard header{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
+.mcard h4{margin:0;font-family:var(--display);font-weight:800;font-size:19px;line-height:1.15;text-transform:uppercase}
+.mcard.goliath{border-color:var(--boost)}
+.mcard.fin{opacity:.5}
+.mcard.found{outline:3px solid var(--toxic)}
+.mcard .after{font-style:italic}
+.todo{margin:3px 0 0;display:flex;flex-direction:column;gap:2px}
+.todo li{display:flex;gap:7px;align-items:baseline;font-size:13px}
+.todo .tag{font-size:11px;min-width:50px;margin-top:0}
+.todo .cnt{color:var(--muted);font-size:12px}
+.t-build{background:#f5d27a}.t-units{background:#7dd3c0}.t-turnin{background:#e8b4d2}.t-project{background:#9fb4f0}.t-collect{background:#c9d99a}
+</style></head><body><div class="wrap">
+<header class="top"><div class="eyebrow">Missions &middot; Level 60+ &middot; Southern Frontier</div>
+<h1>The Goliath Tank</h1>
+<div class="sub">Every mission of level 60 and up that leads to The Goliath Tank. Pick the missions you are on and everything before them drops out.</div></header>
+<div class="toolbar">
+<div class="chips" id="chips"></div>
+<div class="searchbox"><input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="Search missions by name, number or giver" aria-label="Search missions"><kbd title="Press / to search">/</kbd><button class="x" id="clearq" aria-label="Clear search">&times;</button><div class="results" id="res" hidden></div></div>
+<div class="statusline" id="status"></div></div>
+<section class="panel"><h2>Items to make</h2>
+<div class="itemctl"><label><input type="checkbox" id="showonly" checked> include mission-only items</label>
+<label>Sort by <select id="sortitems"><option value="total">total time</option><option value="each">time each</option><option value="count">number needed</option><option value="name">name</option></select></label></div>
+<div id="itembody"></div></section>
+<section class="panel" id="missions"><h2>All missions <small id="mcount"></small></h2>
+<p class="legend">Every mission The Goliath Tank needs, grouped by storyline and ordered by the player level that opens each one (a ~ means the level is inherited from what it needs). The cards wrap into columns, so a wide window shows more at once.</p>
+<label class="legend" id="finlabel" hidden><input type="checkbox" id="showfin"> show the finished missions</label>
+<div class="mgrid" id="mgrid"></div></section>
+</div><script>
+(function(){
+var D={"missions": {"1183": {"id": 1183, "title": "Sometimes You Wanna Go", "story": "p03_rebels", "giver": "perkins", "prev": [], "jobs": [], "xp": 3100, "todo": [["GO", "Travel to the Frontier", 0, 0, 0], ["FIGHT", "Defeat 6 Rebel scouts", 6, 0, 7]], "lvl": 60}, "1184": {"id": 1184, "title": "Find Out if They Know Our Names", "story": "p03_rebels", "giver": "morgan", "prev": [1183], "jobs": [], "xp": 3100, "todo": [["GO", "Travel to the Heartland", 0, 0, 0], ["FIGHT", "Defeat the Rebel Command Post", 1, 0, 1]], "lvl": 0}, "1185": {"id": 1185, "title": "We Are Not Glad They Came", "story": "p03_rebels", "giver": "perkins", "prev": [1184], "jobs": [], "xp": 3200, "todo": [["FIGHT", "Defeat the Rebel invaders!", 4, 0, 4]], "lvl": 0}, "1186": {"id": 1186, "title": "Our Troubles Are All The Same", "story": "p03_rebels", "giver": "zoey", "prev": [1185], "jobs": [], "xp": 3300, "todo": [["UNITS", "Build 2 Armor Mulchers", 2, 0, 0]], "lvl": 0}, "1187": {"id": 1187, "title": "Everyone Will Know Our Names", "story": "p03_rebels", "giver": "ashe", "prev": [1186], "jobs": [], "xp": 4500, "todo": [["FIGHT", "Repel General Ashe", 1, 0, 1]], "lvl": 0}, "1188": {"id": 1188, "title": "Recoil Rebels", "story": "p03_recoilrebels", "giver": "perkins", "prev": [1113], "jobs": [], "xp": 3300, "todo": [["GO", "Go to Recoil Ridge", 0, 0, 0], ["FIGHT", "Defeat The Rebels", 4, 0, 4]], "lvl": 63}, "1189": {"id": 1189, "title": "The War of Rebel Aggression", "story": "p03_recoilrebels", "giver": "morgan", "prev": [1188], "jobs": [], "xp": 3100, "todo": [["FIGHT", "Defeat The Rebels!", 4, 0, 4], ["GO", "Go to Recoil Ridge", 0, 0, 0]], "lvl": 0}, "1190": {"id": 1190, "title": "I Know When I'm Not Wanted", "story": "p03_recoilrebels", "giver": "colt", "prev": [1189], "jobs": [], "xp": 3200, "todo": [["GO", "Go To Recoil Ridge", 0, 0, 0], ["FIGHT", "Defeat The Rebel Caravan", 2, 0, 2]], "lvl": 0}, "1195": {"id": 1195, "title": "Something's Rotten in Recoil (Again)", "story": "p03_rotten", "giver": "perkins", "prev": [1214], "jobs": [], "xp": 4480, "todo": [["TURN IN", "Pay off informants with 100,000 gold", 0, 0, 0]], "lvl": 67}, "1196": {"id": 1196, "title": "For Real, Recoil Smells Like Wet Dog", "story": "p03_rotten", "giver": "perkins", "prev": [1195], "jobs": [[78, 3]], "xp": 3220, "todo": [["MAKE", "Make Hooch at the Distillery", 3, 78, 0]], "lvl": 0}, "1069": {"id": 1069, "title": "Ashe's Last Ride", "story": "p03_ashe", "giver": "perkins", "prev": [1190], "jobs": [[181, 1]], "xp": 1200, "todo": [["MAKE", "Build a Bugged Tent at the Machine Shop", 1, 181, 0]], "lvl": 65}, "1070": {"id": 1070, "title": "Catch Them All!", "story": "p03_ashe", "giver": "perkins", "prev": [1069], "jobs": [], "xp": 3250, "todo": [["FIGHT", "Fend off General Ashe's Attackers", 5, 0, 5], ["GO", "Go to the Heartland", 0, 0, 0]], "lvl": 0}, "1071": {"id": 1071, "title": "Word to the Wise", "story": "p03_ashe", "giver": "morgan", "prev": [1070], "jobs": [], "xp": 4500, "todo": [["GO", "Go to The Heartland", 0, 0, 0], ["FIGHT", "Defeat The Rebels", 1, 0, 1]], "lvl": 0}, "1197": {"id": 1197, "title": "Recoil, Who Farted? Seriously", "story": "p03_rotten", "giver": "morgan", "prev": [1196], "jobs": [[299, 3]], "xp": 2660, "todo": [["MAKE", "Make Low-Tech Persuaders at the Toolshop", 3, 299, 0]], "lvl": 0}, "1081": {"id": 1081, "title": "A Show of Good Faith", "story": "p03_beginpeace", "giver": "perkins", "prev": [1143], "jobs": [], "xp": 4410, "todo": [["TURN IN", "Turn-In 10 Bars", 0, 0, 0]], "lvl": 69}, "1082": {"id": 1082, "title": "The Road to Versailles", "story": "p03_beginpeace", "giver": "perkins", "prev": [1081], "jobs": [], "xp": 0, "todo": [["GO", "Go to the Silver Wolves Depot", 0, 0, 0]], "lvl": 0}, "1083": {"id": 1083, "title": "Expecting the Reasonably Expectable", "story": "p03_beginpeace", "giver": "perkins", "prev": [1082], "jobs": [], "xp": 4620, "todo": [["GO", "Go to the Silver Wolves' Depot", 0, 0, 0], ["FIGHT", "Defeat the Silver Wolves!", 3, 0, 3]], "lvl": 0}, "1212": {"id": 1212, "title": "The Sleepy Banker", "story": "p03_spy", "giver": "perkins", "prev": [1071], "jobs": [[371, 1], [372, 1], [373, 1]], "xp": 2660, "todo": [["MAKE", "Make Rebel Helmet at the Uniform Factory", 1, 371, 0], ["MAKE", "Make Rebel Jackboots at the Uniform Factory", 1, 372, 0], ["MAKE", "Make Rebel Shoulderpad at the Uniform Factory", 1, 373, 0]], "lvl": 66}, "1213": {"id": 1213, "title": "The Bailiff's Sister", "story": "p03_spy", "giver": "perkins", "prev": [1212], "jobs": [], "xp": 4690, "todo": [["GO", "Go to the Heartland", 0, 0, 0], ["FIGHT", "Defeat the Rebel Reinforcements", 2, 0, 2]], "lvl": 0}, "1214": {"id": 1214, "title": "Baby in a Basket", "story": "p03_spy", "giver": "morgan", "prev": [1213], "jobs": [], "xp": 4760, "todo": [["GO", "Go to the Heartland", 0, 0, 0], ["FIGHT", "Defeat the Rebels!", 3, 0, 3]], "lvl": 0}, "1221": {"id": 1221, "title": "Go Run On For A Long Time", "story": "p03_tankboss", "giver": "perkins", "prev": [1083, 1197], "jobs": [], "xp": 0, "todo": [["GO", "Wander Around", 0, 0, 0]], "lvl": 69}, "1222": {"id": 1222, "title": "Something Isn't Right", "story": "p03_tankboss", "giver": "perkins", "prev": [1221], "jobs": [], "xp": 0, "todo": [["GO", "Investigate the Rebel Camp", 0, 0, 0]], "lvl": 0}, "1223": {"id": 1223, "title": "Don't Ever Play with Guns", "story": "p03_tankboss", "giver": "perkins", "prev": [1222], "jobs": [], "xp": 3920, "todo": [["GO", "Sneak Through the Rebel Camp", 0, 0, 0], ["FIGHT", "Defeat the Rebels", 2, 0, 2]], "lvl": 0}, "1224": {"id": 1224, "title": "Follow the Leader", "story": "p03_tankboss", "giver": "perkins", "prev": [1223], "jobs": [], "xp": 0, "todo": [["FIGHT", "Investigate the Goliath Tank", 1, 0, 1]], "lvl": 0}, "1225": {"id": 1225, "title": "Into The Burning Ring of Fire", "story": "p03_tankboss", "giver": "morgan", "prev": [1224], "jobs": [], "xp": 0, "todo": [["GO", "Go to Southern Frontier", 0, 0, 0]], "lvl": 0}, "1226": {"id": 1226, "title": "Serves You Right to Suffer", "story": "p03_tankboss", "giver": "morgan", "prev": [1225], "jobs": [], "xp": 6300, "todo": [["GO", "Go to Southern Frontier", 0, 0, 0], ["FIGHT", "Defeat Rebels Defending the Goliath Tank", 5, 0, 5]], "lvl": 0}, "1099": {"id": 1099, "title": "Robots Can't Sing The Blues", "story": "p03_depressed", "giver": "perkins", "prev": [1214], "jobs": [[335, 1]], "xp": 2380, "todo": [["MAKE", "Build a Helper Robot at the Tool Shop", 1, 335, 0]], "lvl": 67}, "1100": {"id": 1100, "title": "The Worst You Can Do Is Harm", "story": "p03_depressed", "giver": "morgan", "prev": [1099], "jobs": [], "xp": 4830, "todo": [["FIGHT", "Defeat the Killer Robot!", 1, 0, 1]], "lvl": 0}, "1101": {"id": 1101, "title": "My Annoyance is Contrived to Hurt You", "story": "p03_depressed", "giver": "perkins", "prev": [1100], "jobs": [[14, 1], [74, 1], [374, 1]], "xp": 2520, "todo": [["MAKE", "Make Skim Milk Coffee at the Bakery", 1, 14, 0], ["MAKE", "Make Well Whiskey Mixed Drink at the Distillery", 1, 74, 0], ["MAKE", "Make Mixed Grain Leather Shoelaces at the Uniform Factory", 1, 374, 0]], "lvl": 0}, "1102": {"id": 1102, "title": "Oh God, Think of the Children", "story": "p03_depressed", "giver": "floyd", "prev": [1101], "jobs": [[250, 1]], "xp": 2100, "todo": [["MAKE", "Cook a Baby Raptor Stuffed into a Baby Mammoth at the Raptor Ranch", 1, 250, 0]], "lvl": 0}, "1103": {"id": 1103, "title": "We're Gonna Get Together Someday", "story": "p03_depressed", "giver": "ramsey", "prev": [1102], "jobs": [], "xp": 6300, "todo": [["GO", "Go to the World Map", 0, 0, 0], ["FIGHT", "Defeat Rebels", 5, 0, 5]], "lvl": 0}, "1227": {"id": 1227, "title": "The Goliath Tank", "story": "p03_tankboss", "giver": "morgan", "prev": [1226], "jobs": [], "xp": 14000, "todo": [["GO", "Go to Southern Frontier", 0, 0, 0], ["FIGHT", "Defeat the Goliath Tank", 1, 0, 1]], "lvl": 0}, "1111": {"id": 1111, "title": "Currently, and Very Nearby", "story": "p03_fightingrebels", "giver": "perkins", "prev": [1187], "jobs": [], "xp": 3000, "todo": [["FIGHT", "Defeat the Rebel Attackers", 3, 0, 2]], "lvl": 61}, "1112": {"id": 1112, "title": "Enemy Scout on the Bridge", "story": "p03_fightingrebels", "giver": "perkins", "prev": [1111], "jobs": [], "xp": 2800, "todo": [["GO", "Go to the Heartland", 0, 0, 0], ["FIGHT", "Defeat the Rebel Scouts", 2, 0, 2]], "lvl": 0}, "1113": {"id": 1113, "title": "Militant, Industrialized, Complicated", "story": "p03_fightingrebels", "giver": "morgan", "prev": [1112], "jobs": [[179, 1]], "xp": 1500, "todo": [["MAKE", "Make Bridge-B-Gone Explosives at the Machine Shop", 1, 179, 0]], "lvl": 0}, "1141": {"id": 1141, "title": "Que Bono?", "story": "p03_mystery", "giver": "perkins", "prev": [1197], "jobs": [[334, 1]], "xp": 2520, "todo": [["MAKE", "Make a Big Board at the Tool Shop", 1, 334, 0]], "lvl": 68}, "1142": {"id": 1142, "title": "It's Like Lenin Said...", "story": "p03_mystery", "giver": "perkins", "prev": [1103, 1141], "jobs": [[256, 1]], "xp": 2660, "todo": [["MAKE", "Make General Mo's Raptor at the Raptor Ranch", 1, 256, 0], ["GO", "Go to Trotbeck", 0, 0, 0]], "lvl": 0}, "1143": {"id": 1143, "title": "Bugged", "story": "p03_mystery", "giver": "perkins", "prev": [1142], "jobs": [], "xp": 5460, "todo": [["GO", "Go to Trotbeck", 0, 0, 0], ["FIGHT", "Save Ma Pierce from Spiderwasps!", 4, 0, 4]], "lvl": 0}}, "order": [1183, 1184, 1185, 1186, 1187, 1111, 1112, 1113, 1188, 1189, 1190, 1069, 1070, 1071, 1212, 1213, 1214, 1099, 1100, 1101, 1102, 1103, 1195, 1196, 1197, 1141, 1142, 1143, 1081, 1082, 1083, 1221, 1222, 1223, 1224, 1225, 1226, 1227], "stories": {"p03_ashe": {"label": "Ashe's Last Ride", "level": 65, "inferred": false, "preds": ["p03_recoilrebels"], "missions": [1069, 1070, 1071]}, "p03_beginpeace": {"label": "A Show of Good Faith", "level": 69, "inferred": false, "preds": ["p03_mystery"], "missions": [1081, 1082, 1083]}, "p03_depressed": {"label": "Robots Can't Sing The Blues", "level": 67, "inferred": false, "preds": ["p03_spy"], "missions": [1099, 1100, 1101, 1102, 1103]}, "p03_fightingrebels": {"label": "Currently, and Very Nearby", "level": 61, "inferred": false, "preds": ["p03_rebels"], "missions": [1111, 1112, 1113]}, "p03_mystery": {"label": "Que Bono?", "level": 68, "inferred": false, "preds": ["p03_depressed", "p03_rotten"], "missions": [1141, 1142, 1143]}, "p03_rebels": {"label": "Sometimes You Wanna Go", "level": 60, "inferred": false, "preds": [], "missions": [1183, 1184, 1185, 1186, 1187]}, "p03_recoilrebels": {"label": "Recoil Rebels", "level": 63, "inferred": false, "preds": ["p03_fightingrebels"], "missions": [1188, 1189, 1190]}, "p03_rotten": {"label": "Something's Rotten in Recoil (Again)", "level": 67, "inferred": false, "preds": ["p03_spy"], "missions": [1195, 1196, 1197]}, "p03_spy": {"label": "The Sleepy Banker", "level": 66, "inferred": false, "preds": ["p03_ashe"], "missions": [1212, 1213, 1214]}, "p03_tankboss": {"label": "The Goliath Tank", "level": 69, "inferred": false, "preds": ["p03_beginpeace", "p03_rotten"], "missions": [1221, 1222, 1223, 1224, 1225, 1226, 1227]}}, "jobs": {"78": {"id": 78, "name": "Hooch", "group": "Distillery", "time": 43200, "cost": {"gold": 355}, "only": false, "onlyFor": []}, "181": {"id": 181, "name": "Bugged Tent", "group": "Machine", "time": 86400, "cost": {"gold": 60000}, "only": true, "onlyFor": ["Ashe's Last Ride"]}, "299": {"id": 299, "name": "Low-Tech Persuader", "group": "Toolshop", "time": 45, "cost": {"iron": 5, "wood": 25}, "only": true, "onlyFor": ["We are the Flamers, My Friend", "Recoil, Who Farted? Seriously"]}, "371": {"id": 371, "name": "Rebel Helmet", "group": "Uniform", "time": 3600, "cost": {"gold": 3500}, "only": true, "onlyFor": ["The Sleepy Banker"]}, "372": {"id": 372, "name": "Rebel Jackboots", "group": "Uniform", "time": 21600, "cost": {"gold": 5000}, "only": true, "onlyFor": ["The Sleepy Banker"]}, "373": {"id": 373, "name": "Rebel Shoulderpad", "group": "Uniform", "time": 10800, "cost": {"gold": 15000}, "only": true, "onlyFor": ["The Sleepy Banker"]}, "335": {"id": 335, "name": "Helper Robot", "group": "Toolshop", "time": 32400, "cost": {"gold": 40000, "steel": 1000}, "only": true, "onlyFor": ["Robots Can't Sing The Blues"]}, "14": {"id": 14, "name": "Skim Milk Coffee", "group": "Bakery", "time": 14400, "cost": {"gold": 2500}, "only": true, "onlyFor": ["My Annoyance is Contrived to Hurt You"]}, "74": {"id": 74, "name": "Well Whiskey Mixed Drink", "group": "Distillery", "time": 28800, "cost": {"gold": 1100}, "only": true, "onlyFor": ["My Annoyance is Contrived to Hurt You"]}, "374": {"id": 374, "name": "Mixed Grain Shoelaces", "group": "Uniform", "time": 10800, "cost": {"gold": 1000}, "only": true, "onlyFor": ["My Annoyance is Contrived to Hurt You"]}, "250": {"id": 250, "name": "Baby Raptor Stuffed Mammoth", "group": "Raptor ranch", "time": 43200, "cost": {"gold": 15000}, "only": true, "onlyFor": ["Oh God, Think of the Children"]}, "179": {"id": 179, "name": "Bridge-B-Gone", "group": "Machine", "time": 68400, "cost": {"gold": 29000}, "only": true, "onlyFor": ["Militant, Industrialized, Complicated"]}, "334": {"id": 334, "name": "Big Board", "group": "Toolshop", "time": 72000, "cost": {"gold": 26000}, "only": true, "onlyFor": ["Que Bono?"]}, "256": {"id": 256, "name": "General Mo's Raptor", "group": "Raptor ranch", "time": 21600, "cost": {"gold": 160}, "only": false, "onlyFor": []}}, "goliath": "p03_tankboss", "chain": [1221, 1222, 1223, 1224, 1225, 1226, 1227], "minLevel": 60};
+var M=D.missions,S=D.stories,J=D.jobs;
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function dur(s){var d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),x=s%60,p=[];if(d)p.push(d+'d');if(h)p.push(h+'h');if(m)p.push(m+'m');if(x)p.push(x+'s');return p.length?p.join(' '):'0s'}
+/* ---- normalising text for search: lower case, no accents, no punctuation, one space between words ---- */
+function normMap(s){
+ var out='',idx=[],space=true,i,k,c,ch;
+ for(i=0;i<s.length;i++){
+  c=s.charAt(i).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+  for(k=0;k<c.length;k++){ch=c.charAt(k);
+   if(/[a-z0-9]/.test(ch)){out+=ch;idx.push(i);space=false}
+   else if(ch==="'"||ch==='’'||ch==='`'){}
+   else if(!space){out+=' ';idx.push(i);space=true}}}
+ if(out.charAt(out.length-1)===' '){out=out.slice(0,-1);idx.pop()}
+ return {n:out,idx:idx}}
+function norm(s){return normMap(String(s)).n}
+var IDX={};D.order.forEach(function(id){var m=M[id];IDX[id]={t:normMap(m.title),h:norm(m.title+' '+id+' '+S[m.story].label+' '+m.giver)}});
+function lev(a,b,max){
+ if(Math.abs(a.length-b.length)>max)return max+1;
+ var prev=[],i,j;for(j=0;j<=b.length;j++)prev[j]=j;
+ for(i=1;i<=a.length;i++){var cur=[i],low=i;
+  for(j=1;j<=b.length;j++){cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a.charAt(i-1)===b.charAt(j-1)?0:1));if(cur[j]<low)low=cur[j]}
+  if(low>max)return max+1;prev=cur}
+ return prev[b.length]}
+/* a typo: within one edit of a word (two for long words), or the start of a word with one edit */
+function near(t,words){var max=t.length<4?0:t.length<7?1:2;if(!max)return false;
+ return words.some(function(w){return lev(t,w,max)<=max||(w.length>t.length&&lev(t,w.slice(0,t.length),max)<=max)})}
+function search(q){
+ var tokens=norm(q).split(' ').filter(Boolean);if(!tokens.length)return {list:[],tokens:tokens,fuzzy:false};
+ var list=[];
+ D.order.forEach(function(id){var x=IDX[id],score=0,ok=true;
+  tokens.forEach(function(t){if(!ok)return;
+   if(x.t.n.indexOf(t)===0)score+=5;else if((' '+x.t.n).indexOf(' '+t)>=0)score+=4;else if(x.t.n.indexOf(t)>=0)score+=3;
+   else if((' '+x.h).indexOf(' '+t)>=0)score+=2;else if(x.h.indexOf(t)>=0)score+=1;else ok=false});
+  if(ok)list.push({id:id,score:score})});
+ var fuzzy=false;
+ if(!list.length){fuzzy=true;
+  D.order.forEach(function(id){var x=IDX[id];
+   var words=x.h.split(' ');
+   if(tokens.every(function(t){return words.indexOf(t)>=0||x.h.indexOf(t)>=0||near(t,words)}))list.push({id:id,score:0})})}
+ list.sort(function(a,b){return b.score-a.score||(S[M[a.id].story].level-S[M[b.id].story].level)||a.id-b.id});
+ return {list:list,tokens:tokens,fuzzy:fuzzy}}
+function highlight(id,tokens){
+ var m=M[id],x=IDX[id].t,marks=[],t,p,i;
+ tokens.forEach(function(tk){p=x.n.indexOf(tk);while(p>=0){marks.push([x.idx[p],x.idx[p+tk.length-1]+1]);p=x.n.indexOf(tk,p+1)}});
+ marks.sort(function(a,b){return a[0]-b[0]});
+ var merged=[];marks.forEach(function(r){var l=merged[merged.length-1];if(l&&r[0]<=l[1])l[1]=Math.max(l[1],r[1]);else merged.push(r.slice())});
+ var out='',pos=0;merged.forEach(function(r){out+=esc(m.title.slice(pos,r[0]))+'<mark>'+esc(m.title.slice(r[0],r[1]))+'</mark>';pos=r[1]});
+ return out+esc(m.title.slice(pos))}
+/* ---- the player's current missions ---- */
+var KEY='goliath-chain-current-v1',current={},done={},active=0,shown=[];
+try{JSON.parse(localStorage.getItem(KEY)||'[]').forEach(function(id){if(M[id])current[id]=1})}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(Object.keys(current).map(Number)))}catch(e){}}
+function compute(){
+ done={};var stack=[];Object.keys(current).forEach(function(id){M[id].prev.forEach(function(p){stack.push(p)})});
+ while(stack.length){var id=stack.pop();if(done[id])continue;done[id]=1;M[id].prev.forEach(function(p){stack.push(p)})}}
+function toggle(id){if(current[id])delete current[id];else current[id]=1;save();render()}
+/* ---- search box ---- */
+var q=$('q'),res=$('res');
+function renderResults(){
+ var r=search(q.value);shown=r.list.slice(0,12);if(active>=shown.length)active=0;
+ if(!q.value.trim()){res.hidden=true;return}
+ if(!shown.length){res.innerHTML='<div class="nores">No mission matches “'+esc(q.value)+'”. Try fewer words; accents, capitals and punctuation do not matter.</div>';res.hidden=false;return}
+ var html=(r.fuzzy?'<div class="nores">No exact match; closest guesses:</div>':'');
+ shown.forEach(function(x,i){var m=M[x.id],st=S[m.story];
+  html+='<div class="res'+(i===active?' act':'')+(done[x.id]?' fin':'')+'" data-i="'+i+'"><span class="rl">L'+st.level+'</span><div class="rt"><b>'+(r.fuzzy?esc(m.title):highlight(x.id,r.tokens))+'</b><small>'+esc(st.label)+' - mission '+x.id+(done[x.id]?' - finished (hidden)':'')+'</small></div>'
+   +'<button class="btn loc" data-i="'+i+'">Show</button><button class="btn setcur'+(current[x.id]?' on':'')+'" data-i="'+i+'">'+(current[x.id]?'Current ✓':'I am on this')+'</button></div>'});
+ if(r.list.length>shown.length)html+='<div class="nores">+ '+(r.list.length-shown.length)+' more: keep typing to narrow it down.</div>';
+ res.innerHTML=html;res.hidden=false}
+var debounce=null;
+q.addEventListener('input',function(){clearTimeout(debounce);debounce=setTimeout(function(){active=0;renderResults()},60)});
+q.addEventListener('focus',renderResults);
+q.addEventListener('keydown',function(e){
+ if(e.key==='ArrowDown'){e.preventDefault();if(shown.length){active=(active+1)%shown.length;renderResults()}}
+ else if(e.key==='ArrowUp'){e.preventDefault();if(shown.length){active=(active-1+shown.length)%shown.length;renderResults()}}
+ else if(e.key==='Enter'&&shown[active]){e.preventDefault();if(e.shiftKey)locate(shown[active].id);else{toggle(shown[active].id);renderResults()}}
+ else if(e.key==='Escape'){if(q.value){q.value='';renderResults()}else q.blur()}});
+$('clearq').addEventListener('click',function(){q.value='';renderResults();q.focus()});
+document.addEventListener('keydown',function(e){var t=e.target.tagName;if(e.key==='/'&&t!=='INPUT'&&t!=='SELECT'&&t!=='TEXTAREA'){e.preventDefault();q.focus();q.select()}});
+document.addEventListener('mousedown',function(e){if(!e.target.closest('.searchbox'))res.hidden=true});
+res.addEventListener('mousedown',function(e){e.preventDefault()});
+res.addEventListener('click',function(e){
+ var b=e.target.closest('.btn'),row=e.target.closest('.res');if(!row)return;var x=shown[+row.dataset.i];if(!x)return;
+ if(b&&b.classList.contains('setcur')){toggle(x.id);renderResults()}else locate(x.id)});
+function locate(id){res.hidden=true;if(done[id])$('showfin').checked=true;render();var c=document.querySelector('.mcard[data-m="'+id+'"]');if(c){c.scrollIntoView({block:'center'});c.classList.add('found');setTimeout(function(){c.classList.remove('found')},1800)}}
+/* ---- chips and status ---- */
+function renderChips(){
+ var ids=Object.keys(current).map(Number).sort(function(a,b){return a-b}),html='<span class="lab">My current missions:</span>';
+ ids.forEach(function(id){html+='<span class="mchip'+(done[id]?' fin':'')+'" title="'+(done[id]?'Before another current mission, so counted as finished':'')+'">'+esc(M[id].title)+'<button data-x="'+id+'" aria-label="Remove">×</button></span>'});
+ if(ids.length)html+='<button class="btn" id="clearall">Clear all</button>';
+ $('chips').innerHTML=html;
+ var left=D.order.filter(function(id){return !done[id]}).length;
+ $('status').textContent=(ids.length?'':'None selected: everything from level '+D.minLevel+' is shown. Search for a mission and press Enter, or use the buttons below. ')+left+' of '+D.order.length+' missions left'+(D.order.length-left?' ('+(D.order.length-left)+' finished, hidden)':'');
+ var ca=$('clearall');if(ca)ca.onclick=function(){current={};save();render()}}
+$('chips').addEventListener('click',function(e){var b=e.target.closest('button[data-x]');if(b){delete current[b.dataset.x];save();render()}});
+/* ---- items to make ---- */
+function renderItems(){
+ var agg={};
+ D.order.forEach(function(id){if(done[id])return;M[id].jobs.forEach(function(j){var a=agg[j[0]]||(agg[j[0]]={job:J[j[0]],count:0,from:[]});a.count+=j[1];a.from.push(M[id].title)})});
+ var rows=Object.keys(agg).map(function(k){return agg[k]}),withOnly=$('showonly').checked;
+ if(!withOnly)rows=rows.filter(function(r){return !r.job.only});
+ var sort=$('sortitems').value;
+ rows.sort(function(a,b){if(sort==='name')return a.job.name.localeCompare(b.job.name);if(sort==='each')return b.job.time-a.job.time;if(sort==='count')return b.count-a.count||a.job.name.localeCompare(b.job.name);return b.job.time*b.count-a.job.time*a.count});
+ if(!rows.length){$('itembody').innerHTML='<div class="empty">Nothing to make'+(withOnly?'':' (mission-only items are hidden)')+'.</div>';return}
+ var total=0,cnt=0,groups={},gmap={};
+ rows.forEach(function(r){var j=r.job,t=j.time*r.count;total+=t;cnt+=r.count;
+  groups[j.group]=(groups[j.group]||0)+t;var g=gmap[j.group]||(gmap[j.group]={rows:[],count:0});g.rows.push(r);g.count+=r.count});
+ var gnames=Object.keys(gmap).sort(function(a,b){return sort==='name'?a.localeCompare(b):groups[b]-groups[a]||a.localeCompare(b)});
+ var html='<div class="tw"><table class="items"><tr><th>Item</th><th class="n">Needed</th><th class="n">Time each</th><th class="n">Total time</th><th>Cost each</th><th>For mission</th></tr>';
+ gnames.forEach(function(gn){var g=gmap[gn];
+  html+='<tr class="grp"><td>'+esc(gn)+' <small>'+g.rows.length+' kind'+(g.rows.length>1?'s':'')+' of item</small></td><td class="n">'+g.count+'</td><td></td><td class="n">'+dur(groups[gn])+'</td><td></td><td></td></tr>';
+  g.rows.forEach(function(r){var j=r.job,t=j.time*r.count;
+   var cs=Object.keys(j.cost).map(function(k){return j.cost[k]+' '+k}).join(', ')||'-';
+   var from=r.from.slice(0,2).map(esc).join('; ')+(r.from.length>2?' +'+(r.from.length-2):'');
+   html+='<tr><td class="in">'+esc(j.name)+(j.only?'<span class="mo" title="Can only be made while one of these missions is active: '+esc(j.onlyFor.join('; '))+'">MISSION ONLY</span>':'')+'</td><td class="n">'+r.count+'</td><td class="n">'+dur(j.time)+'</td><td class="n">'+dur(t)+'</td><td>'+esc(cs)+'</td><td><small>'+from+'</small></td></tr>'})});
+ html+='<tr class="tot"><td>Total</td><td class="n">'+cnt+'</td><td></td><td class="n">'+dur(total)+'</td><td></td><td></td></tr></table></div>';
+ $('itembody').innerHTML=html}
+$('showonly').addEventListener('change',renderItems);$('sortitems').addEventListener('change',renderItems);
+/* ---- all the missions, in order, as cards that wrap into columns ---- */
+function cardHtml(m,isDone){
+ return '<article class="mcard'+(m.story===D.goliath?' goliath':'')+(isDone?' fin':'')+'" data-m="'+m.id+'"><header><h4>'+esc(m.title)+'</h4>'
+  +(isDone?'':'<button class="cur'+(current[m.id]?' on':'')+'" data-m="'+m.id+'">'+(current[m.id]?'Current \u2713':'I am on this')+'</button>')+'</header>'
+  +(m.xp?'<small>'+m.xp.toLocaleString()+' xp</small>':'')
+  +todoHtml(m)+'</article>'}
+function renderMissions(){
+ var showFin=$('showfin').checked,html='',last=null,count=0,fin=D.order.filter(function(id){return done[id]}).length;
+ D.order.forEach(function(id){var m=M[id],isDone=!!done[id];if(isDone&&!showFin)return;
+  if(m.story!==last){last=m.story;var st=S[m.story];
+   html+='<h3 class="shead"><span class="lv">'+(st.inferred?'~':'')+'L'+st.level+'</span>'+esc(st.label)+(st.preds.length?'<small>after '+st.preds.map(function(p){return esc(S[p].label)}).join('; ')+'</small>':'')+'</h3>'}
+  html+=cardHtml(m,isDone);count++});
+ $('mgrid').innerHTML=html||'<div class="empty">Every mission is finished.</div>';
+ $('mcount').textContent=count+' shown'+(fin?', '+fin+' finished':'');
+ $('finlabel').hidden=!fin;if(!fin)$('showfin').checked=false}
+$('showfin').addEventListener('change',renderMissions);
+function todoHtml(m){
+ if(!m.todo.length)return '<ul class="todo"><li><span class="cnt">no objectives listed</span></li></ul>';
+ return '<ul class="todo">'+m.todo.map(function(t){
+  var tag=t[0],cls='t-'+tag.toLowerCase().replace(' ',''),extra='';
+  if(t[3]&&J[t[3]]){var j=J[t[3]],n=t[2]||1;extra=' <span class="cnt">'+(n>1?'×'+n+' · '+dur(j.time*n)+' ('+dur(j.time)+' each)':dur(j.time))+'</span>'+(j.only?'<span class="mo" title="Can only be made while one of these missions is active: '+esc(j.onlyFor.join('; '))+'">MISSION ONLY</span>':'')}
+  else if(t[4]){extra=' <span class="cnt">'+(t[2]&&t[2]<t[4]?t[2]+' of '+t[4]+' battles':t[4]===1?'1 battle':t[4]+' battles')+'</span>'}
+  else if(t[2]>1){extra=' <span class="cnt">×'+t[2]+'</span>'}
+  return '<li><span class="tag '+cls+'">'+tag+'</span><span>'+esc(t[1])+extra+'</span></li>'}).join('')+'</ul>'}
+document.addEventListener('click',function(e){var b=e.target.closest('.cur[data-m]');if(b)toggle(+b.dataset.m)});
+function render(){compute();renderChips();renderItems();renderMissions();if(!res.hidden)renderResults()}
+render();
+})();
+</script></body></html>
